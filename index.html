@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#eef6ff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#02060b" media="(prefers-color-scheme: dark)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Plantation">
+  <meta name="description" content="课程、复习、打卡与日历提醒，数据只保存在本机。">
+  <title>Plantation</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./assets/icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="./assets/icons/icon-192.png">
+  <link rel="stylesheet" href="./assets/css/app.css">
+</head>
+<body>
+  <div id="update-banner" class="update-banner" role="status" hidden>
+    <span>Plantation 有新版本</span><button id="update-now" type="button">点击刷新</button>
+  </div>
+  <main id="app" aria-live="polite">
+    <header class="topbar">
+      <div><h1>Plantation<span class="brand-dot"></span></h1><p>把时间，留给重要的事。</p></div>
+      <button class="soft-button" type="button">今天</button>
+    </header>
+    <section class="datebar"><button type="button" aria-label="前一天">‹</button><strong>今天的计划</strong><button type="button" aria-label="后一天">›</button></section>
+    <section class="progress-card">
+      <div class="progress-ring" style="--progress:0%"><div><strong>0<span>%</span></strong><small>今日完成</small></div></div>
+      <div><span class="eyebrow">一点一点，向前走</span><h2>从第一项开始</h2><p>课程、复习、休息，各有位置。</p></div>
+    </section>
+    <section class="welcome-card">
+      <span class="eyebrow">准备好新的一天</span><h2>把你的计划带进来</h2>
+      <p>导入学期计划或完整备份，计划与打卡只保存在这台设备。</p>
+      <button class="primary-button" type="button">导入学期计划</button>
+    </section>
+  </main>
+  <nav class="bottom-nav" aria-label="主导航">
+    <button class="selected" type="button">日程</button><button type="button">本周</button><button type="button">打卡</button><button type="button">提醒</button>
+  </nav>
+  <div id="toast" class="toast" role="status" hidden></div>
+  <dialog id="modal" aria-modal="true"></dialog>
+  <noscript>Plantation 需要 JavaScript 才能保存计划和打卡。</noscript>
+  <script src="./assets/js/storage.js" defer></script>
+  <script src="./assets/js/schedule.js" defer></script>
+  <script src="./assets/js/calendar.js" defer></script>
+  <script src="./assets/js/backup.js" defer></script>
+  <script src="./assets/js/ui.js" defer></script>
+  <script src="./assets/js/app.js" defer></script>
+</body>
+</html>
