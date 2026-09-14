@@ -40,7 +40,9 @@
     <button class="selected" type="button">日程</button><button type="button">本周</button><button type="button">打卡</button><button type="button">提醒</button>
   </nav>
   <div id="toast" class="toast" role="status" hidden></div>
-  <dialog id="modal" aria-modal="true"></dialog>
+  <div id="modal-layer" class="modal-layer" hidden>
+    <section id="modal" class="modal-sheet" role="dialog" aria-modal="true"></section>
+  </div>
   <noscript>Plantation 需要 JavaScript 才能保存计划和打卡。</noscript>
   <script src="./assets/js/storage.js" defer></script>
   <script src="./assets/js/schedule.js" defer></script>

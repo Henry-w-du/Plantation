@@ -181,16 +181,21 @@
   }
 
   function showDialog(content) {
-    const dialog = $('#modal');
-    dialog.innerHTML = `<div class="modal-top"><span>Plantation</span><button type="button" data-close aria-label="关闭">×</button></div>${content}`;
-    $('[data-close]', dialog).addEventListener('click', () => dialog.close());
-    dialog.onclick = function outside(event) {
-      if (event.target === dialog) {
-        const rect = dialog.getBoundingClientRect();
-        if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) dialog.close();
-      }
-    };
-    if (typeof dialog.showModal === 'function') dialog.showModal(); else dialog.setAttribute('open', '');
+    const layer = $('#modal-layer');
+    const modal = $('#modal');
+    modal.innerHTML = `<div class="modal-top"><span>Plantation</span><button type="button" data-close aria-label="关闭">×</button></div>${content}`;
+    $('[data-close]', modal).addEventListener('click', closeDialog);
+    layer.onclick = (event) => { if (event.target === layer) closeDialog(); };
+    layer.hidden = false;
+    document.body.classList.add('modal-open');
+    modal.scrollTop = 0;
+  }
+
+  function closeDialog() {
+    const layer = $('#modal-layer');
+    if (!layer) return;
+    layer.hidden = true;
+    document.body.classList.remove('modal-open');
   }
 
   function openDetails(id) {
@@ -208,11 +213,11 @@
     const kinds = P.Schedule.allKinds(context.state);
     const customValue = kinds.includes(kind) ? '' : kind;
     showDialog(`<h2>${title}</h2><form id="plan-form" novalidate>
-      <label class="field">项目名称<input name="title" maxlength="300" required value="${escapeHTML(item?.title || '')}"></label>
+      <label class="field">项目名称<input name="title" type="text" inputmode="text" enterkeyhint="next" maxlength="300" required value="${escapeHTML(item?.title || '')}"></label>
       <div class="form-grid"><label class="field">日期<input name="date" type="date" required value="${date}" ${item ? 'readonly' : ''}></label><label class="field">类型<select name="kindPreset" required>${kinds.map((entry) => `<option value="${escapeHTML(entry)}" ${entry === kind ? 'selected' : ''}>${escapeHTML(entry)}</option>`).join('')}<option value="__custom__" ${customValue ? 'selected' : ''}>＋ 自定义类型</option></select><small class="field-hint">需要其他类型时，选择“自定义类型”</small></label><label class="field">开始<input name="startTime" type="time" required value="${item?.startTime || '09:00'}"></label><label class="field">结束<input name="endTime" type="time" required value="${item?.endTime || '10:00'}"></label></div>
       <label class="field custom-kind-field" ${customValue ? '' : 'hidden'}>自定义类型<input name="customKind" type="text" inputmode="text" enterkeyhint="done" maxlength="30" value="${escapeHTML(customValue)}" placeholder="例如：社团、兼职、生活事务" ${customValue ? 'required' : 'disabled'}><small class="field-hint">输入任意名称，保存后会加入常用类型</small></label>
-      <label class="field">地点 / 教室<input name="location" maxlength="1000" value="${escapeHTML(item?.location || '')}"></label>
-      <label class="field">备注（可写老师、准备事项或复习内容）<textarea name="note" maxlength="15000" rows="5">${escapeHTML(item?.note || '')}</textarea></label>
+      <label class="field">地点 / 教室<input name="location" type="text" inputmode="text" enterkeyhint="next" maxlength="1000" value="${escapeHTML(item?.location || '')}"></label>
+      <label class="field">备注（可写老师、准备事项或复习内容）<textarea name="note" inputmode="text" maxlength="15000" rows="5">${escapeHTML(item?.note || '')}</textarea></label>
       <label class="field">生效范围<select name="scope" ${isDateAdd ? 'disabled' : ''}><option value="once">临时 · 仅 ${date} 这一次</option><option value="future">永久 · ${item ? '整个重复计划' : '从这天起重复'}</option></select></label>
       ${!item ? `<div id="repeat-fields" hidden><div class="form-grid"><label class="field">重复规则<select name="pattern"><option value="all">每周</option><option value="odd">仅单教学周</option><option value="even">仅双教学周</option></select></label><label class="field">重复截至<input name="until" type="date" required value="${context.state.semester.endDate}"></label></div></div>` : ''}
       <p class="fine-print">${isDateAdd ? '临时新增没有重复系列，因此只修改这一次。' : item ? '永久修改会应用到整个重复计划；打卡历史不会因为计划变化被删除。备注使用相同范围。' : '永久新增可按每周、单周或双周重复。假期是否出现取决于所选重复规则与学期设置。'}</p>
@@ -246,11 +251,11 @@
       delete values.customKind;
       if (isDateAdd) values.scope = 'once';
       const result = await context.actions.savePlan(values, item);
-      if (result.ok) $('#modal').close(); else $('#form-error').textContent = result.message;
+      if (result.ok) closeDialog(); else $('#form-error').textContent = result.message;
     });
     if (item) $('[data-delete]', form).addEventListener('click', async () => {
       const chosenScope = isDateAdd ? 'once' : scope.value;
-      if (await context.actions.deletePlan(item, chosenScope)) $('#modal').close();
+      if (await context.actions.deletePlan(item, chosenScope)) closeDialog();
     });
   }
 

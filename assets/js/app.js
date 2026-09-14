@@ -278,7 +278,10 @@
     render();
     setupServiceWorker();
     registerWebMCP();
-    window.setInterval(() => { if (tab === 'day' && !document.querySelector('#modal')?.open) render(); }, 60000);
+    window.setInterval(() => {
+      const layer = document.querySelector('#modal-layer');
+      if (tab === 'day' && (!layer || layer.hidden)) render();
+    }, 60000);
   }
 
   P.App = { init, actions, getState: () => state };

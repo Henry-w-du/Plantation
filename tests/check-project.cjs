@@ -37,6 +37,8 @@ assert.ok(manifest.icons.some((icon) => icon.purpose === 'maskable'));
 assert.ok(index.includes('apple-mobile-web-app-capable'));
 assert.ok(index.includes('apple-mobile-web-app-status-bar-style'));
 assert.ok(index.includes('apple-touch-icon'));
+assert.ok(index.includes('id="modal-layer"') && index.includes('class="modal-sheet"'), 'Editor should use an iOS-compatible overlay');
+assert.ok(!index.includes('<dialog'), 'Native dialog should not be used because of iOS keyboard issues');
 assert.ok(css.includes('env(safe-area-inset-top)') && css.includes('env(safe-area-inset-bottom)'));
 assert.ok(css.includes('@media (prefers-color-scheme: dark)'));
 assert.ok(css.includes('#eef6ff') && css.includes('#02060b') && css.includes('#0b2340'));
@@ -55,6 +57,7 @@ assert.ok(uiSource.includes('<select name="kindPreset"'), 'Plan type should prov
 assert.ok(uiSource.includes('<option value="__custom__"'), 'Plan type should include a dedicated custom choice');
 assert.ok(uiSource.includes('input name="customKind" type="text" inputmode="text"'), 'Custom choice should reveal a real text input');
 assert.ok(uiSource.includes("kindPreset.addEventListener('change', () => updateCustomKind(true))"), 'Choosing custom should activate and focus the text input');
+assert.ok(uiSource.includes('input name="title" type="text" inputmode="text"'), 'Text fields should explicitly request the iPhone text keyboard');
 assert.ok(!/<script[^>]+type=["']module/.test(index), 'Direct file mode should use classic scripts');
 for (const forbidden of ['fonts.googleapis.com', 'fonts.gstatic.com', 'cdnjs', 'unpkg', 'jsdelivr', 'firebase', 'googleapis']) {
   assert.ok(!runtimeText.toLowerCase().includes(forbidden), `Forbidden runtime dependency: ${forbidden}`);
