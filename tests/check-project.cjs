@@ -51,8 +51,10 @@ assert.ok(appSource.includes('registration.waiting'));
 assert.ok(appSource.includes("incoming.exportType !== 'complete-backup'"));
 assert.ok((appSource.match(/effectiveFrom: next\.semester\.startDate/g) || []).length >= 2);
 assert.ok(storageSource.includes('candidateTimestamp') && storageSource.includes('比 IndexedDB 更新的本地备用数据'));
-assert.ok(uiSource.includes('input name="kind" list="kind-options"'), 'Plan type should be a free-text input with suggestions');
-assert.ok(!uiSource.includes('<select name="kind">'), 'Plan type must not be limited to a fixed select');
+assert.ok(uiSource.includes('<select name="kindPreset"'), 'Plan type should provide a stable iPhone-compatible select');
+assert.ok(uiSource.includes('<option value="__custom__"'), 'Plan type should include a dedicated custom choice');
+assert.ok(uiSource.includes('input name="customKind" type="text" inputmode="text"'), 'Custom choice should reveal a real text input');
+assert.ok(uiSource.includes("kindPreset.addEventListener('change', () => updateCustomKind(true))"), 'Choosing custom should activate and focus the text input');
 assert.ok(!/<script[^>]+type=["']module/.test(index), 'Direct file mode should use classic scripts');
 for (const forbidden of ['fonts.googleapis.com', 'fonts.gstatic.com', 'cdnjs', 'unpkg', 'jsdelivr', 'firebase', 'googleapis']) {
   assert.ok(!runtimeText.toLowerCase().includes(forbidden), `Forbidden runtime dependency: ${forbidden}`);

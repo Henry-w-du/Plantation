@@ -206,10 +206,11 @@
     const title = item ? '修改计划与备注' : '添加计划';
     const kind = item?.kind || '自主学习';
     const kinds = P.Schedule.allKinds(context.state);
+    const customValue = kinds.includes(kind) ? '' : kind;
     showDialog(`<h2>${title}</h2><form id="plan-form" novalidate>
       <label class="field">项目名称<input name="title" maxlength="300" required value="${escapeHTML(item?.title || '')}"></label>
-      <div class="form-grid"><label class="field">日期<input name="date" type="date" required value="${date}" ${item ? 'readonly' : ''}></label><label class="field">类型<input name="kind" list="kind-options" maxlength="30" required value="${escapeHTML(kind)}" autocomplete="off"><small class="field-hint">可自由填写，也可选择常用类型</small></label><label class="field">开始<input name="startTime" type="time" required value="${item?.startTime || '09:00'}"></label><label class="field">结束<input name="endTime" type="time" required value="${item?.endTime || '10:00'}"></label></div>
-      <datalist id="kind-options">${kinds.map((entry) => `<option value="${escapeHTML(entry)}"></option>`).join('')}</datalist>
+      <div class="form-grid"><label class="field">日期<input name="date" type="date" required value="${date}" ${item ? 'readonly' : ''}></label><label class="field">类型<select name="kindPreset" required>${kinds.map((entry) => `<option value="${escapeHTML(entry)}" ${entry === kind ? 'selected' : ''}>${escapeHTML(entry)}</option>`).join('')}<option value="__custom__" ${customValue ? 'selected' : ''}>＋ 自定义类型</option></select><small class="field-hint">需要其他类型时，选择“自定义类型”</small></label><label class="field">开始<input name="startTime" type="time" required value="${item?.startTime || '09:00'}"></label><label class="field">结束<input name="endTime" type="time" required value="${item?.endTime || '10:00'}"></label></div>
+      <label class="field custom-kind-field" ${customValue ? '' : 'hidden'}>自定义类型<input name="customKind" type="text" inputmode="text" enterkeyhint="done" maxlength="30" value="${escapeHTML(customValue)}" placeholder="例如：社团、兼职、生活事务" ${customValue ? 'required' : 'disabled'}><small class="field-hint">输入任意名称，保存后会加入常用类型</small></label>
       <label class="field">地点 / 教室<input name="location" maxlength="1000" value="${escapeHTML(item?.location || '')}"></label>
       <label class="field">备注（可写老师、准备事项或复习内容）<textarea name="note" maxlength="15000" rows="5">${escapeHTML(item?.note || '')}</textarea></label>
       <label class="field">生效范围<select name="scope" ${isDateAdd ? 'disabled' : ''}><option value="once">临时 · 仅 ${date} 这一次</option><option value="future">永久 · ${item ? '整个重复计划' : '从这天起重复'}</option></select></label>
@@ -221,10 +222,28 @@
     const form = $('#plan-form');
     const scope = $('[name="scope"]', form);
     const repeat = $('#repeat-fields', form);
+    const kindPreset = $('[name="kindPreset"]', form);
+    const customKindField = $('.custom-kind-field', form);
+    const customKind = $('[name="customKind"]', form);
+    const updateCustomKind = (focusInput) => {
+      const enabled = kindPreset.value === '__custom__';
+      customKindField.hidden = !enabled;
+      customKind.disabled = !enabled;
+      customKind.required = enabled;
+      if (enabled && focusInput) {
+        customKind.focus({ preventScroll: true });
+        requestAnimationFrame(() => customKind.focus({ preventScroll: true }));
+      }
+    };
+    kindPreset.addEventListener('change', () => updateCustomKind(true));
+    updateCustomKind(false);
     if (repeat) { const updateRepeat = () => { repeat.hidden = scope.value !== 'future'; }; scope.addEventListener('change', updateRepeat); updateRepeat(); }
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
       const values = Object.fromEntries(new FormData(form).entries());
+      values.kind = values.kindPreset === '__custom__' ? String(values.customKind || '').trim() : values.kindPreset;
+      delete values.kindPreset;
+      delete values.customKind;
       if (isDateAdd) values.scope = 'once';
       const result = await context.actions.savePlan(values, item);
       if (result.ok) $('#modal').close(); else $('#form-error').textContent = result.message;

@@ -243,6 +243,7 @@ dialog::backdrop { background: rgba(0, 8, 18, 0.54); backdrop-filter: blur(5px);
 .note-box { margin: 23px 0; border-radius: 16px; background: var(--surface); padding: 17px; font-size: 0.93rem; line-height: 1.85; overflow-wrap: anywhere; white-space: pre-wrap; }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .field-hint { display: block; margin-top: 7px; color: var(--muted); font-size: 0.72rem; line-height: 1.45; }
+.custom-kind-field[hidden] { display: none; }
 .form-error { min-height: 0; margin-top: 12px; color: var(--danger); font-size: 0.84rem; line-height: 1.6; }
 .form-error:not(:empty) { border-left: 2px solid var(--danger); padding: 9px 11px; }
 .modal-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 17px; }
