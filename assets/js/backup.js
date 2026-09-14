@@ -63,8 +63,7 @@
     const startTime = time(input.startTime, `${label}开始时间`);
     const endTime = time(input.endTime, `${label}结束时间`);
     if (endTime <= startTime) throw new Error(`${label}的结束时间必须晚于开始时间。`);
-    const kind = text(input.kind || '自主学习', `${label}类型`, 30, true);
-    if (!P.Schedule.KINDS.includes(kind)) throw new Error(`${label}类型不受支持。`);
+    const kind = text(input.kind || '自主学习', `${label}类型`, 30, true).trim();
     return {
       title: text(input.title, `${label}名称`, 300, true).trim(), kind, startTime, endTime,
       location: text(input.location || '', `${label}地点`, 1000), note: text(input.note ?? input.notes ?? '', `${label}备注`, 15000)
@@ -100,8 +99,7 @@
     if (hasStartTime !== hasEndTime) throw new Error(`${label}修改时间时必须同时提供开始和结束时间。`);
     if ('title' in input) patch.title = text(input.title, `${label}名称`, 300, true).trim();
     if ('kind' in input) {
-      patch.kind = text(input.kind, `${label}类型`, 30, true);
-      if (!P.Schedule.KINDS.includes(patch.kind)) throw new Error(`${label}类型不受支持。`);
+      patch.kind = text(input.kind, `${label}类型`, 30, true).trim();
     }
     if (hasStartTime) patch.startTime = time(input.startTime, `${label}开始时间`);
     if (hasEndTime) patch.endTime = time(input.endTime, `${label}结束时间`);
@@ -163,6 +161,10 @@
     const minutes = Number(settings.minutesBefore ?? 10);
     state.reminderSettings = { enabled: settings.enabled !== false, minutesBefore: Number.isInteger(minutes) && minutes >= 0 && minutes <= 10080 ? minutes : 10 };
     state.preferences = raw.preferences && typeof raw.preferences === 'object' && !Array.isArray(raw.preferences) ? JSON.parse(JSON.stringify(raw.preferences)) : {};
+    const customKinds = Array.isArray(state.preferences.customKinds) ? state.preferences.customKinds : [];
+    if (customKinds.length > 100) throw new Error('自定义类型数量过多。');
+    state.preferences.customKinds = [...new Set(customKinds.map((kind) => text(kind, '自定义类型', 30, true).trim()))]
+      .filter((kind) => !P.Schedule.KINDS.includes(kind));
     state.meta = {
       createdAt: text(raw.meta?.createdAt || new Date().toISOString(), '创建时间', 100, true),
       updatedAt: text(raw.meta?.updatedAt || new Date().toISOString(), '更新时间', 100, true),

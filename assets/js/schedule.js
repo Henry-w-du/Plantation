@@ -158,6 +158,27 @@
     return new Intl.DateTimeFormat('zh-CN', { timeZone: 'UTC', month: 'long', day: 'numeric', weekday: 'long' }).format(new Date(`${day}T12:00:00Z`));
   }
 
+  function allKinds(state) {
+    const output = [];
+    const seen = new Set();
+    const add = (value) => {
+      const kind = typeof value === 'string' ? value.trim() : '';
+      if (!kind || kind.length > 30 || seen.has(kind)) return;
+      seen.add(kind);
+      output.push(kind);
+    };
+    KINDS.forEach(add);
+    (state?.preferences?.customKinds || []).forEach(add);
+    (state?.baseSchedule || []).forEach((item) => add(item.kind));
+    (state?.permanentOverrides || []).forEach((item) => add(item.patch?.kind));
+    (state?.dateOverrides || []).forEach((item) => {
+      add(item.plan?.kind);
+      add(item.patch?.kind);
+    });
+    Object.values(state?.checkins || {}).forEach((item) => add(item?.snapshot?.kind));
+    return output;
+  }
+
   function makeId(prefix = 'id') {
     if (window.crypto && typeof window.crypto.randomUUID === 'function') return `${prefix}-${window.crypto.randomUUID()}`;
     if (window.crypto && typeof window.crypto.getRandomValues === 'function') {
@@ -170,6 +191,6 @@
 
   P.Schedule = {
     KINDS, validDate, validTime, addDays, daysBetween, isoWeekday, today, teachingWeek, weekLabel,
-    occurrenceKey, materializeDay, materializeRange, recurringWeeks, conflictsForDay, dateLabel, makeId
+    occurrenceKey, materializeDay, materializeRange, recurringWeeks, conflictsForDay, dateLabel, allKinds, makeId
   };
 })(window.Plantation = window.Plantation || {});

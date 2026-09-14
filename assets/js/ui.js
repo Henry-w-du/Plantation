@@ -122,12 +122,13 @@
   function reminderView() {
     const settings = context.state.reminderSettings;
     const directFile = location.protocol === 'file:';
+    const kinds = P.Schedule.allKinds(context.state);
     return `${header('提醒有边界，安排有余地。')}<span class="eyebrow">交给系统日历提醒</span><h2>安排好，也记得去做</h2>
       ${directFile ? '<p class="notice">当前通过本地文件打开：计划功能可用，但安装、Service Worker 和离线缓存需要 HTTPS 或 localhost。</p>' : ''}
       <section class="panel"><label class="toggle-row"><div><h3>导出时携带提醒</h3><p class="muted">每项开始前 ${settings.minutesBefore} 分钟</p></div><input type="checkbox" role="switch" data-action="alarms" ${settings.enabled ? 'checked' : ''}><span class="switch" aria-hidden="true"></span></label>
         <p class="fine-print">Plantation 内的提醒开关仅控制后续导出的日历内容，不会自动修改已经导入到 iPhone 系统日历中的事件，也不等于系统闹钟。</p>
         <label class="field">导出范围<select id="calendar-range"><option value="7">所选日期起 7 天</option><option value="30">所选日期起 30 天</option><option value="term">所选日期起至学期末</option></select></label>
-        <fieldset><legend>包含的项目</legend><div class="chips">${P.Schedule.KINDS.map((kind) => `<label><input name="calendar-kind" type="checkbox" value="${escapeHTML(kind)}" ${kind !== '休息' ? 'checked' : ''}>${escapeHTML(kind)}</label>`).join('')}</div></fieldset>
+        <fieldset><legend>包含的项目</legend><div class="chips">${kinds.map((kind) => `<label><input name="calendar-kind" type="checkbox" value="${escapeHTML(kind)}" ${kind !== '休息' ? 'checked' : ''}>${escapeHTML(kind)}</label>`).join('')}</div></fieldset>
         <button class="primary-button wide-button" type="button" data-action="calendar" ${context.state.baseSchedule.length || context.state.dateOverrides.some((item) => item.action === 'add') ? '' : 'disabled'}>导出 iPhone 日历 .ics</button>
         <p class="fine-print">建议导入单独的 Plantation 日历。计划变更后请重新导出，或在系统日历里手动修改；避免重复导入造成重复提醒。</p></section>
       <section class="panel"><h3>计划与备份</h3><p class="muted">学期计划导入会替换计划结构，但保留现有历史打卡和提醒设置；完整恢复会替换全部本机数据。</p>
@@ -203,9 +204,12 @@
     const isDateAdd = item?.origin === 'date-add';
     const date = item?.date || context.selectedDate;
     const title = item ? '修改计划与备注' : '添加计划';
+    const kind = item?.kind || '自主学习';
+    const kinds = P.Schedule.allKinds(context.state);
     showDialog(`<h2>${title}</h2><form id="plan-form" novalidate>
       <label class="field">项目名称<input name="title" maxlength="300" required value="${escapeHTML(item?.title || '')}"></label>
-      <div class="form-grid"><label class="field">日期<input name="date" type="date" required value="${date}" ${item ? 'readonly' : ''}></label><label class="field">类型<select name="kind">${P.Schedule.KINDS.map((kind) => `<option ${kind === (item?.kind || '自主学习') ? 'selected' : ''}>${escapeHTML(kind)}</option>`).join('')}</select></label><label class="field">开始<input name="startTime" type="time" required value="${item?.startTime || '09:00'}"></label><label class="field">结束<input name="endTime" type="time" required value="${item?.endTime || '10:00'}"></label></div>
+      <div class="form-grid"><label class="field">日期<input name="date" type="date" required value="${date}" ${item ? 'readonly' : ''}></label><label class="field">类型<input name="kind" list="kind-options" maxlength="30" required value="${escapeHTML(kind)}" autocomplete="off"><small class="field-hint">可自由填写，也可选择常用类型</small></label><label class="field">开始<input name="startTime" type="time" required value="${item?.startTime || '09:00'}"></label><label class="field">结束<input name="endTime" type="time" required value="${item?.endTime || '10:00'}"></label></div>
+      <datalist id="kind-options">${kinds.map((entry) => `<option value="${escapeHTML(entry)}"></option>`).join('')}</datalist>
       <label class="field">地点 / 教室<input name="location" maxlength="1000" value="${escapeHTML(item?.location || '')}"></label>
       <label class="field">备注（可写老师、准备事项或复习内容）<textarea name="note" maxlength="15000" rows="5">${escapeHTML(item?.note || '')}</textarea></label>
       <label class="field">生效范围<select name="scope" ${isDateAdd ? 'disabled' : ''}><option value="once">临时 · 仅 ${date} 这一次</option><option value="future">永久 · ${item ? '整个重复计划' : '从这天起重复'}</option></select></label>

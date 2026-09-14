@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE_NAME = 'plantation-v2.1.0';
+const CACHE_NAME = 'plantation-v2.2.0';
 const CACHE_PREFIX = 'plantation-v';
 const APP_SHELL = [
   './',

@@ -23,6 +23,7 @@ const index = read('index.html');
 const css = read('assets/css/app.css');
 const appSource = read('assets/js/app.js');
 const storageSource = read('assets/js/storage.js');
+const uiSource = read('assets/js/ui.js');
 const sw = read('service-worker.js');
 const manifest = JSON.parse(read('manifest.webmanifest'));
 const runtimeText = ['index.html', 'manifest.webmanifest', 'service-worker.js', 'assets/css/app.css', 'assets/js/storage.js', 'assets/js/schedule.js', 'assets/js/calendar.js', 'assets/js/backup.js', 'assets/js/ui.js', 'assets/js/app.js'].map(read).join('\n');
@@ -50,6 +51,8 @@ assert.ok(appSource.includes('registration.waiting'));
 assert.ok(appSource.includes("incoming.exportType !== 'complete-backup'"));
 assert.ok((appSource.match(/effectiveFrom: next\.semester\.startDate/g) || []).length >= 2);
 assert.ok(storageSource.includes('candidateTimestamp') && storageSource.includes('比 IndexedDB 更新的本地备用数据'));
+assert.ok(uiSource.includes('input name="kind" list="kind-options"'), 'Plan type should be a free-text input with suggestions');
+assert.ok(!uiSource.includes('<select name="kind">'), 'Plan type must not be limited to a fixed select');
 assert.ok(!/<script[^>]+type=["']module/.test(index), 'Direct file mode should use classic scripts');
 for (const forbidden of ['fonts.googleapis.com', 'fonts.gstatic.com', 'cdnjs', 'unpkg', 'jsdelivr', 'firebase', 'googleapis']) {
   assert.ok(!runtimeText.toLowerCase().includes(forbidden), `Forbidden runtime dependency: ${forbidden}`);
@@ -121,6 +124,14 @@ const withAdd = P.Backup.normalize(JSON.parse(JSON.stringify(sample)));
 withAdd.dateOverrides.push({ id: 'test-add', date: firstDate, action: 'add', plan: { title: '临时任务', kind: '自主学习', startTime: '06:00', endTime: '06:30', location: '', note: '' }, source: 'user', createdAt: '2026-09-13T00:00:05.000Z' });
 assert.ok(P.Schedule.materializeDay(P.Backup.normalize(withAdd), firstDate).some((item) => item.title === '临时任务'));
 
+const withCustomKind = P.Backup.normalize(JSON.parse(JSON.stringify(sample)));
+withCustomKind.preferences.customKinds = ['社团'];
+withCustomKind.dateOverrides.push({ id: 'test-custom-kind', date: firstDate, action: 'add', plan: { title: '志愿活动', kind: '公益志愿', startTime: '06:30', endTime: '07:00', location: '', note: '' }, source: 'user', createdAt: '2026-09-13T00:00:05.500Z' });
+const customKindClean = P.Backup.normalize(withCustomKind);
+assert.ok(P.Schedule.materializeDay(customKindClean, firstDate).some((item) => item.kind === '公益志愿'));
+assert.ok(P.Schedule.allKinds(customKindClean).includes('社团'));
+assert.ok(P.Schedule.allKinds(customKindClean).includes('公益志愿'));
+
 const partialTimePatch = JSON.parse(JSON.stringify(sample));
 partialTimePatch.permanentOverrides.push({ id: 'partial-time', seriesId: repeated.id, effectiveFrom: firstDate, action: 'update', patch: { startTime: '23:00' }, createdAt: '2026-09-13T00:00:06.000Z' });
 assert.throws(() => P.Backup.normalize(partialTimePatch), /同时提供开始和结束时间/);
@@ -158,6 +169,6 @@ console.log(JSON.stringify({
   result: 'PASS', files: required.length, baseSeries: sample.baseSchedule.length,
   importedDateOverrides: sample.dateOverrides.length, materializedPlans: 1296,
   theme: 'white+blue / near-black+deep-blue', subpathSafe: true, icons: true,
-  legacyMigration: true, layeredOverrides: true, historicalCheckins: true,
+  legacyMigration: true, layeredOverrides: true, historicalCheckins: true, customKinds: true,
   ics: 'UTF-8 CRLF, 75-octet folding, alarm toggle', forbiddenRuntimeCDNs: 'none'
 }, null, 2));

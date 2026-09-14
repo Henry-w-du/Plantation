@@ -44,16 +44,16 @@
 
   function cleanEditorValues(values) {
     const output = {
-      title: String(values.title || '').trim(), kind: String(values.kind || ''),
+      title: String(values.title || '').trim(), kind: String(values.kind || '').trim(),
       date: String(values.date || ''), startTime: String(values.startTime || ''), endTime: String(values.endTime || ''),
       location: String(values.location || '').trim(), note: String(values.note || ''), scope: values.scope === 'future' ? 'future' : 'once',
       pattern: ['odd', 'even'].includes(values.pattern) ? values.pattern : 'all', until: String(values.until || '')
     };
     if (!output.title) throw new Error('请填写项目名称。');
-    if (!P.Schedule.KINDS.includes(output.kind)) throw new Error('请选择有效类型。');
+    if (!output.kind) throw new Error('请填写类型，例如“社团”或“值班”。');
     if (!P.Schedule.validDate(output.date)) throw new Error('请选择有效日期。');
     if (!P.Schedule.validTime(output.startTime) || !P.Schedule.validTime(output.endTime) || output.endTime <= output.startTime) throw new Error('结束时间需要晚于开始时间；跨午夜请拆成两项。');
-    if (output.title.length > 300 || output.location.length > 1000 || output.note.length > 15000) throw new Error('名称、地点或备注过长。');
+    if (output.title.length > 300 || output.kind.length > 30 || output.location.length > 1000 || output.note.length > 15000) throw new Error('名称、类型、地点或备注过长。');
     return output;
   }
 
@@ -68,6 +68,9 @@
     if (item?.origin === 'date-add') values.scope = 'once';
     const next = clone(state);
     const fields = { title: values.title, kind: values.kind, startTime: values.startTime, endTime: values.endTime, location: values.location, note: values.note };
+    next.preferences = next.preferences || {};
+    next.preferences.customKinds = Array.isArray(next.preferences.customKinds) ? next.preferences.customKinds : [];
+    if (!P.Schedule.KINDS.includes(values.kind) && !next.preferences.customKinds.includes(values.kind)) next.preferences.customKinds.push(values.kind);
     let startForCheck = values.date;
     let endForCheck = values.date;
 
